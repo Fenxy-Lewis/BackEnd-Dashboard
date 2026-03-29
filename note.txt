@@ -1,0 +1,4 @@
+==> Code for reset id defult in database (Dbeaver) 
+
+TRUNCATE TABLE "OrderDetails" RESTART IDENTITY CASCADE;
+TRUNCATE TABLE "Orders" RESTART IDENTITY CASCADE;

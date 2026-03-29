@@ -1,0 +1,46 @@
+require("dotenv").config();
+const express = require("express");
+const path = require("path");
+const cors = require("cors");
+const fileUpload = require("express-fileupload");
+
+const db = require("./models");
+const requestLogger = require("./requestLogger");
+const corsOptions = require("./src/config/cors");
+
+// ─── Routers ─────────────────────────────────────────────────────────────────
+const authRouter = require("./src/routes/auth");
+const productRouter = require("./src/routes/productRouter");
+const categoryRouter = require("./src/routes/categoryRouter");
+const customerRouter = require("./src/routes/customerRouter");
+const orderRouter = require("./src/routes/orderRouter");
+const authMiddleware = require("./src/middlewares/authMiddleware");
+
+// ─── App Setup ────────────────────────────────────────────────────────────────
+const app = express();
+const PORT = process.env.PORT;
+
+// ─── Middleware ───────────────────────────────────────────────────────────────
+app.use(cors(corsOptions));
+app.use(requestLogger);
+app.use(express.json());
+app.use(fileUpload({ limits: { fileSize: 50 * 1024 * 1024 }, createParentPath: true }));
+
+// ─── Static Files ─────────────────────────────────────────────────────────────
+app.use("/uploads/products", express.static(path.join(process.cwd(), "uploads/products")));
+
+// ─── Database Connection ──────────────────────────────────────────────────────
+db.sequelize
+  .authenticate()
+  .then(() => console.log("✅ Database connected successfully"))
+  .catch((e) => console.error("❌ Unable to connect to the database:", e));
+
+// ─── Routes ───────────────────────────────────────────────────────────────────
+app.use("/api/v1/auth", authRouter);
+app.use("/api/v1/products",  productRouter);
+app.use("/api/v1/categories",categoryRouter);
+app.use("/api/v1/customers", customerRouter);
+app.use("/api/v1/orders",    orderRouter);
+
+// ─── Start Server ─────────────────────────────────────────────────────────────
+app.listen(PORT, () => console.log(`🚀 Server listening on port ${PORT}`));
