@@ -1,25 +1,49 @@
 const db = require("../../../models");
 const { Customer, Products, Order, OrderDetail } = db;
 
-// POST /api/v1/orders
+let invoiceCounter = 1;
+function generateInvoiceNumber() {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, "0");
+  const day = String(now.getDate()).padStart(2, "0");
+  const counter = String(invoiceCounter++).padStart(4, "0");
+  return `INV-${year}-${month}-${day}-${counter}`;
+}
+
 const create = async (req, res) => {
   try {
-    const { customerId, location, items, discount } = req.body;
+    // ✅ បន្ថែម location ក្នុង destructure
+    const { items, discount, location } = req.body;
 
-    // Validate customer
-    const customer = await Customer.findByPk(customerId);
-    if (!customer) {
-      return res.status(404).json({ success: false, message: "Customer not found" });
+    // ✅ Validate items មានឬទេ
+    if (!items || !Array.isArray(items) || items.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Items are required",
+      });
     }
 
-    // Build order details & calculate total
     let total = 0;
     const orderDetailsData = [];
+
     for (const item of items) {
       const { productId, qty } = item;
+
+      // ✅ Validate productId និង qty
+      if (!productId || !qty || qty <= 0) {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid productId or qty",
+        });
+      }
+
       const product = await Products.findByPk(productId);
       if (!product) {
-        return res.status(404).json({ success: false, message: `Product id=${productId} not found` });
+        return res.status(404).json({
+          success: false,
+          message: `Product id=${productId} not found`,
+        });
       }
 
       const amount = product.price * qty;
@@ -34,24 +58,22 @@ const create = async (req, res) => {
       });
     }
 
-    // Persist order
+    // ✅ location បានមកពី req.body ហើយ
     const createdOrder = await Order.create({
-      customerId,
-      orderNumber: 10,
+      customerId: 1,
+      orderNumber: generateInvoiceNumber(),
       total,
-      discount,
+      discount: discount || 0,
       orderDate: new Date(),
-      location,
+      location: location || null, // ✅ មិន crash បើ location undefined
     });
 
-    // Persist order details
     const finalOrderDetails = orderDetailsData.map((item) => ({
       ...item,
       orderId: createdOrder.id,
     }));
     await OrderDetail.bulkCreate(finalOrderDetails);
 
-    // Return full order with relations
     const completedOrder = await Order.findByPk(createdOrder.id, {
       include: [
         { model: Customer, as: "customer" },
@@ -59,10 +81,19 @@ const create = async (req, res) => {
       ],
     });
 
-    res.json({ success: true, message: "Order created successfully", data: completedOrder });
+    res.json({
+      success: true,
+      message: "Order created successfully",
+      data: completedOrder,
+    });
   } catch (error) {
-    console.error("Error creating order:", error);
-    res.status(500).json({ success: false, message: "Internal server error" });
+    // ✅ បង្ហាញ error detail ច្បាស់ជាង
+    console.error("Error creating order:", error.message);
+    res.status(500).json({
+      success: false,
+      message: "Internal server error",
+      error: error.message, // ✅ ជួយ debug
+    });
   }
 };
 

@@ -30,7 +30,15 @@ auth.post("/register", async (req, res) => {
   }
 });
 
-
+auth.get("/users", async (req, res) => {
+  try {
+    const users = await User.findAll();
+    res.status(200).json({ users });
+  } catch (error) {
+    console.error("error in /users:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+});
 
 auth.post("/login", async (req, res) => {
   try {

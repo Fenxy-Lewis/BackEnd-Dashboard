@@ -21,9 +21,12 @@ module.exports = (sequelize, DataTypes) => {
       firstname: DataTypes.STRING,
       lastname: DataTypes.STRING,
       phone: DataTypes.STRING,
-      password: DataTypes.STRING,
       username: DataTypes.STRING,
       email: DataTypes.STRING,
+      isActive: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: true,
+      },
     },
     {
       sequelize,

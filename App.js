@@ -14,6 +14,7 @@ const productRouter = require("./src/routes/productRouter");
 const categoryRouter = require("./src/routes/categoryRouter");
 const customerRouter = require("./src/routes/customerRouter");
 const orderRouter = require("./src/routes/orderRouter");
+const productExpireRouter = require("./src/routes/productExpireRouter");
 const authMiddleware = require("./src/middlewares/authMiddleware");
 
 // ─── App Setup ────────────────────────────────────────────────────────────────
@@ -24,10 +25,18 @@ const PORT = process.env.PORT;
 app.use(cors(corsOptions));
 app.use(requestLogger);
 app.use(express.json());
-app.use(fileUpload({ limits: { fileSize: 50 * 1024 * 1024 }, createParentPath: true }));
+app.use(
+  fileUpload({
+    limits: { fileSize: 50 * 1024 * 1024 },
+    createParentPath: true,
+  }),
+);
 
 // ─── Static Files ─────────────────────────────────────────────────────────────
-app.use("/uploads/products", express.static(path.join(process.cwd(), "uploads/products")));
+app.use(
+  "/uploads/products",
+  express.static(path.join(process.cwd(), "uploads/products")),
+);
 
 // ─── Database Connection ──────────────────────────────────────────────────────
 db.sequelize
@@ -37,10 +46,19 @@ db.sequelize
 
 // ─── Routes ───────────────────────────────────────────────────────────────────
 app.use("/api/v1/auth", authRouter);
-app.use("/api/v1/products",  productRouter);
-app.use("/api/v1/categories",categoryRouter);
+app.use("/api/v1/products", productRouter);
+app.use("/api/v1/categories", categoryRouter);
 app.use("/api/v1/customers", customerRouter);
-app.use("/api/v1/orders",    orderRouter);
+app.use("/api/v1/orders", orderRouter);
+app.use("/api/v1/product-expires", productExpireRouter);
 
 // ─── Start Server ─────────────────────────────────────────────────────────────
-app.listen(PORT, () => console.log(`🚀 Server listening on port ${PORT}`));
+app.listen(PORT, () => {
+  console.log(`🚀 Server listening on port ${PORT}`);
+
+  // Start the expiry notification cron job (runs daily at 7:00 AM)
+  const {
+    startExpiryNotificationCron,
+  } = require("./src/routes/Controller/productExpireController");
+  startExpiryNotificationCron();
+});
