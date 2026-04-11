@@ -1,4 +1,4 @@
-require("dotenv").config();
+require("dotenv").config(); 
 const express = require("express");
 const path = require("path");
 const cors = require("cors");
@@ -10,6 +10,7 @@ const corsOptions = require("./src/config/cors");
 
 // ─── Routers ─────────────────────────────────────────────────────────────────
 const authRouter = require("./src/routes/auth");
+const paymentRoute = require("./src/routes/paymentRouter");
 const productRouter = require("./src/routes/productRouter");
 const categoryRouter = require("./src/routes/categoryRouter");
 const customerRouter = require("./src/routes/customerRouter");
@@ -51,6 +52,7 @@ app.use("/api/v1/categories", categoryRouter);
 app.use("/api/v1/customers", customerRouter);
 app.use("/api/v1/orders", orderRouter);
 app.use("/api/v1/product-expires", productExpireRouter);
+app.use("/api/v1/payments", paymentRoute);
 
 // ─── Start Server ─────────────────────────────────────────────────────────────
 app.listen(PORT, () => {

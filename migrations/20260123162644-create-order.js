@@ -11,22 +11,34 @@ module.exports = {
       },
       customerId: {
         type: Sequelize.INTEGER,
+        allowNull: false,
+        references: {
+          model: "Customers",
+          key: "id",
+        },
+        onUpdate: "CASCADE",
+        onDelete: "SET NULL",
       },
       orderNumber: {
         type: Sequelize.STRING,
         unique: true,
+        allowNull: false,
       },
       total: {
         type: Sequelize.DECIMAL,
+        allowNull: false,
       },
       discount: {
         type: Sequelize.DECIMAL,
+        allowNull: false,
       },
       orderDate: {
         type: Sequelize.DATE,
+        allowNull: false,
       },
       location: {
         type: Sequelize.TEXT,
+        allowNull: false,
       },
       createdAt: {
         allowNull: false,

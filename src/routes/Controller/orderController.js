@@ -1,14 +1,17 @@
 const db = require("../../../models");
 const { Customer, Products, Order, OrderDetail } = db;
 
-let invoiceCounter = 1;
 function generateInvoiceNumber() {
   const now = new Date();
+  const timestamp = now.getTime().toString().slice(-6); // យកតែ ៦ លេខចុងក្រោយនៃ timestamp
+  const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0'); // លេខ random ៣ ខ្ទង់
+  
   const year = now.getFullYear();
   const month = String(now.getMonth() + 1).padStart(2, "0");
   const day = String(now.getDate()).padStart(2, "0");
-  const counter = String(invoiceCounter++).padStart(4, "0");
-  return `INV-${year}-${month}-${day}-${counter}`;
+
+  return `INV-${year}${month}${day}-${timestamp}${random}`;
+  // លទ្ធផលប្រហែលជា៖ INV-20260410-458129045
 }
 
 const create = async (req, res) => {
@@ -60,12 +63,12 @@ const create = async (req, res) => {
 
     // ✅ location បានមកពី req.body ហើយ
     const createdOrder = await Order.create({
-      customerId: 1,
+      customerId: 5,
       orderNumber: generateInvoiceNumber(),
-      total,
+      total: total,
       discount: discount || 0,
       orderDate: new Date(),
-      location: location || null, // ✅ មិន crash បើ location undefined
+      location: "Praek Krobao, Peam Chor, Prey Veng", // ✅ មិន crash បើ location undefined
     });
 
     const finalOrderDetails = orderDetailsData.map((item) => ({
