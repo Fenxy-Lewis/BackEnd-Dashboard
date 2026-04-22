@@ -65,8 +65,8 @@ const create = async (req, res) => {
     const createdOrder = await Order.create({
       customerId: 5,
       orderNumber: generateInvoiceNumber(),
-      total: total,
-      discount: discount || 0,
+      total: total.toFixed(2),
+      discount: discount || 0.00,
       orderDate: new Date(),
       location: "Praek Krobao, Peam Chor, Prey Veng", // ✅ មិន crash បើ location undefined
     });

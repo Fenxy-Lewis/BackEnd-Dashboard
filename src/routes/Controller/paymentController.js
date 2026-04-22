@@ -3,9 +3,10 @@ const {
   getReqTime,
   enCodeBase64,
   buildPurchaseHash,
+  buildCheckTransactionHash,
 } = require("../utils/payway");
 const { Order, Payment, OrderDetail, Customer } = db;
-
+const axios = require("axios");
 // POST /api/v1/orders/:orderId/payments
 // Create payment
 const createPayment = async (req, res) => {
@@ -53,12 +54,15 @@ const createPayment = async (req, res) => {
       });
     }
 
+    let tran_id;
+    tran_id = `ORD-${Date.now()}`;
+
     // Create payment
     const payment = await Payment.create({
       orderId: order.id,
-      paywayTranId: `PAYWAY-${Date.now()}`,
-      method: "abapay_khqr",
-      // method: "cards",
+      paywayTranId: tran_id,
+      // method: "abapay_khqr",
+      method: "cards",
       status: "PENDING",
       amount: Number(order.total).toFixed(2),
       remark: `Payment for order ${order.orderNumber} Pay via ABA KHQR`,
@@ -78,17 +82,17 @@ const createPayment = async (req, res) => {
     let paymentItems = JSON.stringify(
       orderDetails.map((item) => ({
         name: item.productName || "Unknown",
-        price: item.productPrice || 0,
-        qty: item.qty || 1,
+        price: Number(item.productprice) || 0,
+        qty: Number(item.qty) || 1,
       })),
     );
     paymentItems = enCodeBase64(paymentItems);
-    const endCodeReturnUrl = `${process.env.FRONTEND_URL}/api/v1/payments/${payment.id}/admin/pos`;
+    const encodedReturnUrl = `${process.env.FRONTEND_URL}/api/v1/payments/${payment.id}/admin/pos`;
 
     const paymentPayload = {
       merchant_id: process.env.MERCHANT_ID,
       req_time,
-      tran_id: payment.paywayTranId,
+      tran_id,
       amount: Number(order.total).toFixed(2),
       items: paymentItems,
       shipping: "0.00",
@@ -98,13 +102,14 @@ const createPayment = async (req, res) => {
       phone: order.customer?.phone || "000000000",
       type: "purchase",
       view_type: "popup",
-      payment_option: "abapay_khqr",
-      // payment_option: "cards",
-      return_url: endCodeReturnUrl,
+      // payment_option: "abapay_khqr",
+      payment_option: "cards",
+      return_url: encodedReturnUrl,
       cancel_url: `${process.env.FRONTEND_URL}/admin/pos`,
-      continue_success_url: `${process.env.FRONTEND_URL}/admin/pos`,
+      continue_success_url: `${process.env.FRONTEND_URL}/admin/pos?tranId=${tran_id}`,
       currency: "USD",
       payment_gate: 0,
+      lifetime: 3600,
     };
 
     const hash = buildPurchaseHash(paymentPayload);
@@ -136,4 +141,70 @@ const createPayment = async (req, res) => {
   }
 };
 
-module.exports = { createPayment };
+const checkTransaction = async (req, res) => {
+  try {
+    const { tranId } = req.params;
+
+    const payment = await Payment.findOne({
+      where: { paywayTranId: tranId },
+    });
+
+    if (!payment) {
+      return res.status(404).json({
+        message: "Payment not found",
+      });
+    }
+
+    const req_time = getReqTime();
+    const merchant_id = process.env.MERCHANT_ID;
+    const tran_id = payment.paywayTranId;
+
+    const hash = buildCheckTransactionHash({ req_time, merchant_id, tran_id });
+
+    const payload = {
+      req_time,
+      merchant_id,
+      tran_id,
+      hash,
+    };
+    const response = await axios.post(
+      `${process.env.BASE_URL}/api/payment-gateway/v1/payments/check-transaction-2`,
+      payload,
+    );
+    console.log("response from ABA", response.data);
+
+    const abaData = response.data;
+    const statusCode = abaData?.status?.code;
+    const paymentStatusCode = abaData?.data?.payment_status_code;
+    const paymentStatus = abaData?.data?.payment_status;
+
+    if (statusCode == "00") {
+      if (paymentStatusCode === 0 && paymentStatus === "APPROVED") {
+        payment.status = "PAID";
+        payment.paidAt = abaData?.data?.transaction_date;
+      } else if (
+        paymentStatus === "DECLINED" ||
+        paymentStatus === "FAILED" ||
+        paymentStatusCode !== 0
+      ) {
+        payment.status = "FAILED";
+      } else {
+        payment.status = "PENDING";
+      }
+
+      payment.remark = JSON.stringify(abaData);
+      await payment.save();
+    }
+
+    return res.json({
+      message: "Payment checked successfully",
+      data: {
+        payment: payment,
+        aba: abaData,
+      },
+    });
+  } catch (error) {
+    console.error("Error", error);
+  }
+};
+module.exports = { createPayment, checkTransaction };

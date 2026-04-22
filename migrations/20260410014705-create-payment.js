@@ -11,7 +11,7 @@ module.exports = {
       },
       orderId: {
         type: Sequelize.INTEGER,
-        allowNull: true,
+        allowNull: false,
         references: {
           model: "Orders",
           key: "id",
@@ -21,7 +21,7 @@ module.exports = {
       },
       paywayTranId: {
         type: Sequelize.STRING,
-        allowNull: true,
+        allowNull: false,
         unique: true,
       },
       method: {

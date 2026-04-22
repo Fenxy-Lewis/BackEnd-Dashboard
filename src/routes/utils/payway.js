@@ -31,17 +31,21 @@ function buildPurchaseHash(payload) {
     payload.return_url +
     payload.cancel_url +
     payload.continue_success_url +
-    payload.currency;
-
+    payload.currency +
+    payload.lifetime;
   return signPayWay(raw);
 }
 
 const enCodeBase64 = (url) => {
   return Buffer.from(url).toString("base64");
 };
-
+function buildCheckTransactionHash({ req_time, merchant_id, tran_id }) {
+  const raw = req_time + merchant_id + tran_id;
+  return signPayWay(raw);
+}
 module.exports = {
   getReqTime,
   buildPurchaseHash,
   enCodeBase64,
+  buildCheckTransactionHash,
 };

@@ -12,8 +12,6 @@ module.exports = {
 
   async down(queryInterface, Sequelize) {
     await queryInterface.changeColumn("Orders", "orderNumber", {
-      type: Sequelize.INTEGER,
-      allowNull: false,
     });
   },
 };
