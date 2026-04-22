@@ -1,4 +1,4 @@
-require("dotenv").config(); 
+require("dotenv").config();
 const express = require("express");
 const path = require("path");
 const cors = require("cors");
@@ -53,6 +53,9 @@ app.use("/api/v1/customers", customerRouter);
 app.use("/api/v1/orders", orderRouter);
 app.use("/api/v1/product-expires", productExpireRouter);
 app.use("/api/v1/payments", paymentRoute);
+app.get("/api/v1/health", (req, res) => {
+  res.status(200).json({ message: "Server is healthy" });
+});
 
 // ─── Start Server ─────────────────────────────────────────────────────────────
 app.listen(PORT, () => {
