@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const imageFileUpload = require("./fileUpload")
+const imageFileUpload = require("./fileUpload");
 const {
   getProducts,
   createProduct,
@@ -15,9 +15,8 @@ const {
 
 router.get("/", getProducts);
 router.post("/", createProduct);
+router.use("/", imageFileUpload); // must be before /:id delete to avoid route conflict
 router.put("/:id", updateProduct);
 router.delete("/:id", deleteProduct);
-router.use("/", imageFileUpload);
-
 
 module.exports = router;

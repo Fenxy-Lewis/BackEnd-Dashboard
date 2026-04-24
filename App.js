@@ -6,8 +6,6 @@ const fileUpload = require("express-fileupload");
 
 const db = require("./models");
 const requestLogger = require("./requestLogger");
-const corsOptions = require("./src/config/cors");
-
 // ─── Routers ─────────────────────────────────────────────────────────────────
 const authRouter = require("./src/routes/auth");
 const paymentRoute = require("./src/routes/paymentRouter");

@@ -5,6 +5,7 @@ const fs = require("fs");
 const { storage } = require("../storage/storage");
 const multer = require("multer");
 const upload = multer({ storage });
+const { cloudinary } = require("../storage/storage");
 const { Products, ProductImage } = require("../../models");
 
 // Image Upload Route
@@ -21,6 +22,7 @@ router.post("/:id/upload", upload.single("file"), async (req, res) => {
       productId,
       fileName: file.originalname,
       imageUrl: file.path,
+      publicId: file.filename,
     });
     res.status(200).json({
       message: "Image uploaded successfully",
@@ -31,6 +33,7 @@ router.post("/:id/upload", upload.single("file"), async (req, res) => {
     res.status(500).json({ message: "Internal server error" });
   }
 });
+
 // Image link download route (API)
 router.get("/images/:imageId/download", async (req, res) => {
   try {
@@ -55,34 +58,53 @@ router.get("/images/:imageId/download", async (req, res) => {
   }
 });
 // Delete ProductImage (API)
+// Delete ProductImage (API)
 router.delete("/delete/:imageId", async (req, res) => {
   try {
     const { imageId } = req.params;
-    const image = await ProductImage.findOne({
-      where: {
-        id: imageId,
-      },
-    });
-    if (!image) {
-      return res
-        .status(404)
-        .json({ message: `Image with id ${imageId} not found` });
+
+    // ពិនិត្យថា imageId ជាលេខត្រឹមត្រូវ
+    if (!imageId || isNaN(imageId)) {
+      return res.status(400).json({ message: "Invalid image ID" });
     }
-    const fileName = image.imageUrl.split("/").pop();
-    const imagePath = path.join(process.cwd(), "uploads/products", fileName);
-    if (!fs.existsSync(imagePath)) {
+
+    const image = await ProductImage.findOne({
+      where: { id: imageId },
+    });
+
+    // បើមិនរករកឃើញ record
+    if (!image) {
       return res.status(404).json({
-        message: "Image file not found on server",
+        message: `រូបភាពដែលមាន ID ${imageId} មិនមានក្នុងប្រព័ន្ធទេ`,
       });
     }
-    fs.unlinkSync(imagePath);
+
+    // លុបរូបភាពពី Cloudinary (បើ publicId មាន)
+    if (image.publicId) {
+      const cloudinaryResult = await cloudinary.uploader.destroy(
+        image.publicId,
+      );
+
+      // ពិនិត្យថា Cloudinary លុបបានជោគជ័យ
+      if (
+        cloudinaryResult.result !== "ok" &&
+        cloudinaryResult.result !== "not found"
+      ) {
+        return res.status(500).json({
+          message: "មិនអាចលុបរូបភាពពី Cloudinary បានទេ",
+        });
+      }
+    }
+
+    // លុប record ពី Database
     await image.destroy();
+
     res.status(200).json({
-      message: `ImageId ${imageId} deleted successfully`,
+      message: `រូបភាព ID ${imageId} ត្រូវបានលុបដោយជោគជ័យ`,
     });
   } catch (error) {
-    console.error("Error in /:id/delete:", error);
-    res.status(500).json({ message: "Fuck You..! Internal server error" });
+    console.error("Error deleting image:", error);
+    res.status(500).json({ message: "Internal server error" });
   }
 });
 
