@@ -26,19 +26,6 @@ const PORT = process.env.PORT;
 app.use(cors(corsOptions));
 app.use(requestLogger);
 app.use(express.json());
-app.use(
-  fileUpload({
-    limits: { fileSize: 50 * 1024 * 1024 },
-    createParentPath: true,
-  }),
-);
-
-// ─── Static Files ─────────────────────────────────────────────────────────────
-app.use(
-  "/uploads/products",
-  express.static(path.join(process.cwd(), "uploads/products")),
-);
-
 // ─── Database Connection ──────────────────────────────────────────────────────
 db.sequelize
   .authenticate()

@@ -1,30 +1,26 @@
 const app = require("express");
 const router = app.Router();
 const path = require("path");
-const { v4: uuidv4 } = require("uuid");
 const fs = require("fs");
-const { Products, category, ProductImage } = require("../../models");
+const { storage } = require("../storage/storage");
+const multer = require("multer");
+const upload = multer({ storage });
+const { Products, ProductImage } = require("../../models");
 
 // Image Upload Route
-router.post("/:id/upload", async (req, res) => {
+router.post("/:id/upload", upload.single("file"), async (req, res) => {
   try {
-    const { file } = req.files;
+    const { file } = req;
     const productId = req.params.id;
     const product = await Products.findByPk(productId);
     if (!product) {
       return res.status(404).json({ message: "Product not found" });
-      const { Product, Category, ProductImage } = require("../../models");
     }
-    const fileName = `${uuidv4()}${path.extname(file.name)}`;
-    const uploadPath = path.join(process.cwd(), "uploads/products", fileName);
-    await file.mv(uploadPath);
-
-    const domain = `${req.protocol}://${req.get("host")}`;
-    const imageUrl = `${domain}/uploads/products/${fileName}`;
+    console.log(file);
     const savedImageUrl = await ProductImage.create({
       productId,
-      fileName: file.name,
-      imageUrl,
+      fileName: file.originalname,
+      imageUrl: file.path,
     });
     res.status(200).json({
       message: "Image uploaded successfully",
