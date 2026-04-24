@@ -73,12 +73,12 @@ router.delete("/delete/:imageId", async (req, res) => {
     // បើមិនរករកឃើញ record
     if (!image) {
       return res.status(404).json({
-        message: `រូបភាពដែលមាន ID ${imageId} មិនមានក្នុងប្រព័ន្ធទេ`,
+        message: `Product Image ID ${imageId} not found`,
       });
     }
 
-    // លុបរូបភាពពី Cloudinary (បើ publicId មាន)
     if (image.publicId) {
+      console.log(image.publicId);
       const cloudinaryResult = await cloudinary.uploader.destroy(
         image.publicId,
       );
@@ -89,7 +89,7 @@ router.delete("/delete/:imageId", async (req, res) => {
         cloudinaryResult.result !== "not found"
       ) {
         return res.status(500).json({
-          message: "មិនអាចលុបរូបភាពពី Cloudinary បានទេ",
+          message: "Cannot delete image from Cloudinary",
         });
       }
     }
@@ -98,6 +98,7 @@ router.delete("/delete/:imageId", async (req, res) => {
     await image.destroy();
 
     res.status(200).json({
+      success: true,
       message: `Product Image ID ${imageId} deleted successfully`,
     });
   } catch (error) {

@@ -14,6 +14,7 @@ const categoryRouter = require("./src/routes/categoryRouter");
 const customerRouter = require("./src/routes/customerRouter");
 const orderRouter = require("./src/routes/orderRouter");
 const productExpireRouter = require("./src/routes/productExpireRouter");
+const fileUploadRouter = require("./src/routes/fileUpload");
 const authMiddleware = require("./src/middlewares/authMiddleware");
 const corsOptions = require("./src/config/cors");
 
@@ -34,6 +35,7 @@ db.sequelize
 // ─── Routes ───────────────────────────────────────────────────────────────────
 app.use("/api/v1/auth", authRouter);
 app.use("/api/v1/products", productRouter);
+app.use("/api/v1/products", fileUploadRouter);
 app.use("/api/v1/categories", categoryRouter);
 app.use("/api/v1/customers", customerRouter);
 app.use("/api/v1/orders", orderRouter);
