@@ -1,5 +1,5 @@
-const app = require("express");
-const router = app.Router();
+const express = require("express");
+const router = express.Router();
 const path = require("path");
 const fs = require("fs");
 const { storage } = require("../storage/storage");
@@ -57,7 +57,6 @@ router.get("/images/:imageId/download", async (req, res) => {
     res.status(500).json({ message: "Internal server error" });
   }
 });
-// Delete ProductImage (API)
 // Delete ProductImage (API)
 router.delete("/delete/:imageId", async (req, res) => {
   try {

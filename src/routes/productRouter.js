@@ -15,8 +15,8 @@ const {
 
 router.get("/", getProducts);
 router.post("/", createProduct);
-router.use("/", imageFileUpload); // must be before /:id delete to avoid route conflict
 router.put("/:id", updateProduct);
 router.delete("/:id", deleteProduct);
+router.use("/", imageFileUpload); // must be before /:id delete to avoid route conflict
 
 module.exports = router;
