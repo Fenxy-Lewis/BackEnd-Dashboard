@@ -15,6 +15,7 @@ const customerRouter = require("./src/routes/customerRouter");
 const orderRouter = require("./src/routes/orderRouter");
 const productExpireRouter = require("./src/routes/productExpireRouter");
 const authMiddleware = require("./src/middlewares/authMiddleware");
+const corsOptions = require("./src/config/cors");
 
 // ─── App Setup ────────────────────────────────────────────────────────────────
 const app = express();

@@ -61,7 +61,6 @@ router.get("/images/:imageId/download", async (req, res) => {
 router.delete("/delete/:imageId", async (req, res) => {
   try {
     const { imageId } = req.params;
-
     // ពិនិត្យថា imageId ជាលេខត្រឹមត្រូវ
     if (!imageId || isNaN(imageId)) {
       return res.status(400).json({ message: "Invalid image ID" });
@@ -99,7 +98,7 @@ router.delete("/delete/:imageId", async (req, res) => {
     await image.destroy();
 
     res.status(200).json({
-      message: `រូបភាព ID ${imageId} ត្រូវបានលុបដោយជោគជ័យ`,
+      message: `Product Image ID ${imageId} deleted successfully`,
     });
   } catch (error) {
     console.error("Error deleting image:", error);
