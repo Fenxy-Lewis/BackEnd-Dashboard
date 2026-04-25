@@ -155,7 +155,10 @@ const getProductExpireById = async (req, res) => {
     const { id } = req.params;
 
     const record = await ProductExpires.findByPk(id, {
-      include: productInclude,
+      include: {
+        model: Products,
+        attributes: ["name", "id"],
+      },
     });
 
     if (!record) {
