@@ -153,6 +153,43 @@ const updateProduct = async (req, res) => {
   }
 };
 
+// GET single product by ID
+const getProductById = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const product = await Products.findByPk(id, {
+      include: [
+        { model: category, as: "category", attributes: ["id", "name"] },
+        {
+          model: ProductImage,
+          as: "productImages",
+          attributes: ["id", "productId", "fileName", "imageUrl"],
+        },
+      ],
+    });
+
+    if (!product) {
+      return res.status(404).json({
+        success: false,
+        message: `Product with ID ${id} not found`,
+      });
+    }
+
+    res.json({
+      success: true,
+      message: "Product retrieved successfully",
+      data: product,
+    });
+  } catch (error) {
+    console.error("Error fetching product by ID:", error);
+    res.status(500).json({
+      success: false,
+      message: "Internal server error while fetching product",
+    });
+  }
+};
+
 // DELETE product by ID
 const deleteProduct = async (req, res) => {
   try {
@@ -183,6 +220,7 @@ const deleteProduct = async (req, res) => {
 
 module.exports = {
   getProducts,
+  getProductById,
   createProduct,
   updateProduct,
   deleteProduct,
